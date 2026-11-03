@@ -1,0 +1,34 @@
+name: Build Only
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build Morphe patches
+        run: ./gradlew :patches:buildAndroid --no-daemon
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.MORPHE_PACKAGES_TOKEN }}
+
+      - name: Upload MPP
+        uses: actions/upload-artifact@v4
+        with:
+          name: subscription-groups-build
+          path: patches/build/libs/*.mpp
+          if-no-files-found: error
